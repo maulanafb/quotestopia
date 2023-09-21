@@ -1,0 +1,52 @@
+import { connectToDB } from "@utils/database";
+import Prompt from "@models/prompt";
+
+// GET (READ )
+export const GET = async (request,{params}) => {
+    try {
+        await connectToDB();
+        const prompt = await Prompt.findById(params.id).populate
+            ('creator');
+        
+        if (!prompt) return new Response("quotes tidak ditemukan", { status: 404 })
+        
+        return new Response(JSON.stringify(prompt), { status:200});
+    } catch (error) {
+        return new Response('Failed to fetch all prompt', { status:500})
+    }
+}
+// PATCH (UPDATE)
+export const PATCH = async (request, { params }) => {
+    const { prompt, tag } = await request.json();
+
+    try {
+        await connectToDB();
+
+        const existingPrompt = await Prompt.findById(params.id);
+        if (!existingPrompt) return new Response('quotes tidak ditemukan', { status: 404 })
+        
+        existingPrompt.prompt = prompt
+        existingPrompt.tag = tag
+
+        await existingPrompt.save()
+
+        return new Response(JSON.stringify(existingPrompt),{status:200})
+    } catch (error) {
+        return new Response('quotes gagal diedit',{status:500})
+    }
+
+
+}
+// DELETE (DELETE)
+
+export const DELETE = async (request, { params }) => {
+    try {
+        await connectToDB();
+
+        await Prompt.findByIdAndRemove(params.id)
+
+        return new Response("quotes berhasil dihapus",{status:200})
+    } catch (error) {
+        return new Response("Quotes gagal dihapus", { status:500})
+    }
+}
